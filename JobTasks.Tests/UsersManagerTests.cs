@@ -1,4 +1,6 @@
 using JobTasks.Task3;
+using System;
+using System.Data;
 
 namespace JobTasks.Tests
 {
@@ -16,28 +18,42 @@ namespace JobTasks.Tests
         [Test]
         [TestCase("Mark", "Leader")]
         [TestCase("Test username 123", "Test job")]
-        public void TryCreateNewUserPositiveTest(string username, string job)
+        public void CreateNewUserPositiveTest(string username, string job)
         {
-            var result = _usersManager.TryCreateNewUser(username, job, out var response);
+            var response = CreateNewUser(username, job);
 
-            Assert.That(result, Is.True, $"Ошибка во время создания нового пользователя, [username]=[{username}], [job]=[{job}]");
             Assert.That(response, Is.Not.Null, $"Ошибка во время создания нового пользователя, [username]=[{username}], [job]=[{job}]");
+            Assert.That(response.Created, Is.True, $"Ошибка во время создания нового пользователя, [username]=[{username}], [job]=[{job}]");
             Assert.That(response.Name, Is.EqualTo(username), $"Неверное имя пользователя после его создания, [expected]=[{username}], [actual]=[{response.Name}]");
             Assert.That(response.Job, Is.EqualTo(job), $"Неверное имя должности после его создания, [expected]=[{job}], [actual]=[{response.Job}]");
+            Assert.That(response.Id, Is.Not.Default, $"Id пользователя не был назначен при успешном создании учетной записи.");
+            Assert.That(response.CreatedAt, Is.Not.Default, $"Время создания аккаунта пользователя не было назначено при успешном создании учетной записи.");
         }
 
         [Test]
         [TestCase(null, null)]
         [TestCase(null, "")]
         [TestCase("", null)]
-        [TestCase("a", "")]
+        
         [TestCase("", "t")]
-        public void TryCreateNewUserNegativeTest(string username, string job)
+        public void CreateNewUserWrongUsernameTest(string username, string job)
         {
-            var result = _usersManager.TryCreateNewUser(username, job, out var response);
+            Assert.Throws<AggregateException>(() => CreateNewUser(username, job), "User name cannot be null or empty.");
+            
+        }
 
-            Assert.That(result, Is.False, $"Был создан пользователь с некорректными данными, [username]=[{username}], [job]=[{job}]");
-            Assert.That(response, Is.Null, $"Был создан пользователь с некорректными данными, [username]=[{username}], [job]=[{job}]");
+        [Test]
+        [TestCase("a", "")]
+        [TestCase("test", null)]
+        public void CreateNewUserWrongJobTest(string username, string job)
+        {
+            Assert.Throws<AggregateException>(() => CreateNewUser(username, job), "Job role cannot be null or empty.");
+
+        }
+
+        private UserInfoResponse CreateNewUser(string username, string job)
+        {
+            return _usersManager.CreateNewUserAsync(username, job).Result;
         }
     }
 }

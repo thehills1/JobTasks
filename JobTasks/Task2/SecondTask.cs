@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
 using System;
+using System.Threading.Tasks;
 
 namespace JobTasks.Task2
 {
@@ -15,13 +16,13 @@ namespace JobTasks.Task2
             _request = new RestRequest("api/users?page=2");
         }
 
-        public UsersInfo Request()
+        public async Task<UsersInfo> RequestAsync()
         {
-            var content = _client.ExecuteGet(_request).Content;
+            var result = await _client.ExecuteGetAsync(_request);
 
             try
             {
-                return JsonConvert.DeserializeObject<UsersInfo>(content);
+                return JsonConvert.DeserializeObject<UsersInfo>(result.Content);
             }
             catch (Exception e)
             {
